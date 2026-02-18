@@ -54,22 +54,6 @@ Given raw historical stock data (OHLC format), perform:
 
 ---
 
-## 🏗 System Architecture
-
-Raw CSV Files
-↓
-Python ETL (Pandas, NumPy)
-↓
-Data Cleaning & Business Rule Enforcement
-↓
-MySQL Database (Structured Storage)
-↓
-SQL Analytics (Window Functions & Aggregations)
-↓
-Matplotlib Multi-Panel Dashboard
-
-
-
 ---
 
 ## 🛠 Tech Stack
