@@ -53,8 +53,10 @@ Given raw historical stock data (OHLC format), perform:
 - UP vs DOWN trend ratio per company  
 
 ---
+Output:
 
 ---
+<img width="1606" height="1097" alt="download" src="https://github.com/user-attachments/assets/c7a2a501-fa6a-4a8f-8ec1-ebcd435e86e0" />
 
 ## 🛠 Tech Stack
 
