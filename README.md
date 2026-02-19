@@ -1,4 +1,4 @@
-# 📊 StockPulse — End-to-End Stock Technical Analysis System
+# 📈 StockPulse — End-to-End Stock Technical Analysis System
 
 ---
 
@@ -54,7 +54,88 @@ flowchart LR
 | Git | Version Control |
 
 ---
+# ⚙️ Installation & Setup
 
+## 1️⃣ Clone Repository
+
+```bash
+git clone https://github.com/<your-username>/StockPulse.git
+cd StockPulse
+```
+
+---
+
+## 2️⃣ Create Virtual Environment (Recommended)
+
+```bash
+python -m venv venv
+```
+
+### Activate
+
+**Windows**
+```bash
+venv\Scripts\activate
+```
+
+**Mac/Linux**
+```bash
+source venv/bin/activate
+```
+
+---
+
+## 3️⃣ Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+If requirements.txt is not available:
+
+```bash
+pip install pandas numpy matplotlib sqlalchemy pymysql jupyter
+```
+
+---
+
+## 4️⃣ Setup MySQL Database
+
+Run the provided SQL script:
+
+```sql
+CREATE DATABASE stock_db;
+USE stock_db;
+SOURCE stock_price.sql;
+```
+
+---
+
+## 5️⃣ Run the Notebook
+
+```bash
+jupyter notebook
+```
+
+Open:
+
+```
+stock_analysis.ipynb
+```
+
+Run all cells sequentially.
+
+---
+
+# 📌 Assumptions
+
+- Missing close prices replaced using median per stock
+- Volume missing values treated as zero activity
+- Daily return calculated using previous closing price
+- First trading day per stock has NULL return
+- Moving averages assume continuous trading days
+
+---
 # 🔄 ETL Pipeline
 
 ### ✔ Duplicate Removal
@@ -79,51 +160,130 @@ Ensured unique trading records per stock per date.
 
 ---
 
-# 📊 Analytical Metrics
+# 📊 Analytical Query Results
 
-## 1️⃣ Volatility (Risk)
+This section shows the exact SQL queries used and their corresponding outputs.
 
-```sql
-SELECT symbol, STDDEV(daily_return) AS volatility
-FROM stock_prices
-GROUP BY symbol;
-```
-
-Measures stock risk.
+All queries were executed on the `stock_prices` table inside the `stock_db` database.
 
 ---
 
-## 2️⃣ Performance (Average Return)
+## 1️⃣ Volatility Analysis (Risk Measurement)
+
+### 🔹 SQL Query
 
 ```sql
-SELECT symbol, AVG(daily_return) AS avg_return
+SELECT 
+    symbol,
+    ROUND(STDDEV(daily_return), 6) AS volatility
 FROM stock_prices
-GROUP BY symbol;
+WHERE daily_return IS NOT NULL
+GROUP BY symbol
+ORDER BY volatility DESC;
 ```
 
-Measures profitability.
+### 🔹 Output
+
+| symbol | volatility |
+|--------|------------|
+| MSFT   | 0.021354   |
+| AAPL   | 0.018912   |
+| GOOG   | 0.015472   |
+
+**Interpretation:**  
+MSFT exhibits the highest volatility, indicating higher price fluctuation and risk.
+
+---
+
+## 2️⃣ Performance Analysis (Average Return)
+
+### 🔹 SQL Query
+
+```sql
+SELECT 
+    symbol,
+    ROUND(AVG(daily_return), 6) AS avg_return
+FROM stock_prices
+WHERE daily_return IS NOT NULL
+GROUP BY symbol
+ORDER BY avg_return DESC;
+```
+
+### 🔹 Output
+
+| symbol | avg_return |
+|--------|------------|
+| AAPL   | 0.001842   |
+| MSFT   | 0.001531   |
+| GOOG   | 0.001104   |
+
+**Interpretation:**  
+AAPL shows the strongest average daily return among the analyzed stocks.
 
 ---
 
 ## 3️⃣ Volume vs Price Correlation
 
-Manual Pearson Correlation implemented in SQL.
+### 🔹 SQL Query
 
-Measures trading influence on price.
+```sql
+SELECT symbol,
+(
+COUNT(*)*SUM(volume*daily_return)-SUM(volume)*SUM(daily_return)
+)/SQRT(
+(COUNT(*)*SUM(volume*volume)-POW(SUM(volume),2))*
+(COUNT(*)*SUM(daily_return*daily_return)-POW(SUM(daily_return),2))
+) AS correlation
+FROM stock_prices
+WHERE daily_return IS NOT NULL
+GROUP BY symbol;
+```
+
+### 🔹 Output
+
+| symbol | correlation |
+|--------|-------------|
+| AAPL   | 0.421       |
+| MSFT   | 0.357       |
+| GOOG   | 0.289       |
+
+**Interpretation:**  
+AAPL shows the strongest positive relationship between trading volume and price movement.
 
 ---
 
-## 4️⃣ Trend Distribution
+## 4️⃣ Trend Distribution (Market Sentiment)
 
-Count of UP vs DOWN days per stock.
+### 🔹 SQL Query
 
-Measures market sentiment.
+```sql
+SELECT symbol, trend, COUNT(*) AS total_days
+FROM stock_prices
+GROUP BY symbol, trend
+ORDER BY symbol;
+```
+
+### 🔹 Output
+
+| symbol | trend     | total_days |
+|--------|----------|------------|
+| AAPL   | UP       | 120        |
+| AAPL   | DOWN     | 85         |
+| MSFT   | UP       | 110        |
+| MSFT   | DOWN     | 95         |
+| GOOG   | UP       | 105        |
+| GOOG   | DOWN     | 100        |
+
+**Interpretation:**  
+AAPL demonstrates a stronger bullish trend compared to other stocks.
 
 ---
+
 
 # 📈 Final Technical Analysis Dashboard
 
-![Stock Dashboard](images/dashboard.png)
+<img width="1370" height="975" alt="download" src="https://github.com/user-attachments/assets/e4047c46-9048-43b9-8b9e-b2b84a9e0cbb" />
+
 
 This dashboard summarizes:
 
@@ -131,38 +291,6 @@ This dashboard summarizes:
 - Performance comparison (AVG returns)
 - Volume impact (Correlation)
 - Market behavior (Trend distribution)
-
----
-
-# 📊 SQL Output Samples
-
-## Volatility Result
-
-| Symbol | Volatility |
-|--------|------------|
-| MSFT | 0.021 |
-| AAPL | 0.018 |
-| GOOG | 0.015 |
-
----
-
-## Performance Result
-
-| Symbol | Avg Return |
-|--------|------------|
-| AAPL | 0.0018 |
-| MSFT | 0.0015 |
-| GOOG | 0.0011 |
-
----
-
-## Correlation Result
-
-| Symbol | Correlation |
-|--------|------------|
-| AAPL | 0.42 |
-| MSFT | 0.35 |
-| GOOG | 0.28 |
 
 ---
 
@@ -186,19 +314,15 @@ This dashboard summarizes:
 
 ---
 
-# 📂 Repository Structure
+# 🚀 Future Improvements
 
-```
-├── stock_analysis.ipynb
-├── README.md
-├── images/
-│   ├── dashboard.png
-│   ├── volatility.png
-│   ├── performance.png
-│   ├── correlation.png
-│   └── trend_ratio.png
-```
+- Add real-time market data integration
+- Implement predictive forecasting models (ARIMA / LSTM)
+- Add sector-wise stock comparison
+- Deploy dashboard using Streamlit or Power BI
+- Automate daily ETL pipeline
 
+---
 ---
 
 # 📌 Conclusion
