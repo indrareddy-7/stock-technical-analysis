@@ -1,177 +1,210 @@
-# 📊 Stock Technical Analysis & Data Engineering Pipeline
+# 📊 StockPulse — End-to-End Stock Technical Analysis System
+
+---
 
 ## 📌 Project Overview
 
-This project implements an end-to-end **Stock Technical Analysis System** using **Python, MySQL, SQLAlchemy, and Matplotlib**.
+StockPulse is an end-to-end **Stock Market Analytics Pipeline** built using:
 
-The system processes raw stock market CSV data, applies business validation rules, stores cleaned data in a relational database, performs analytical SQL queries, and generates a multi-panel dashboard for financial insights.
+- Python
+- MySQL
+- SQL (Window Functions, Aggregations)
+- Matplotlib
+- Data Engineering Architecture
 
-The objective is to transform dirty financial data into structured, validated, and analytically useful insights.
-
----
-
-## 🎯 Problem Statement
-
-Given raw historical stock data (OHLC format), perform:
-
-### 🔹 Technical Analysis
-
-- Plot daily closing price trends per stock  
-- Identify the highest volatility stock  
-- Analyze volume vs price movement correlation  
-- Compute 7-day and 30-day moving averages  
+This system processes raw stock data, applies financial validation rules, stores structured data in a relational database, and generates analytical dashboards for investment insights.
 
 ---
 
-### 🔹 Business Rules Implementation
+## 🎯 Objective
 
-#### 1️⃣ Missing Value Treatment
-
-- `close_price` → replace with median per stock  
-- `volume` → replace with 0  
-- `high_price` → replace with `max(open_price, close_price)`  
-- `low_price` → replace with `min(open_price, close_price)`  
-
-#### 2️⃣ Price Sanity Validation
-
-- `high_price ≥ open_price AND close_price`  
-- `low_price ≤ open_price AND close_price`  
-- Auto-correct if violated  
-
-#### 3️⃣ Trend Classification
-
-- `daily_return > 0` → **UP**  
-- `daily_return < 0` → **DOWN**  
-- `daily_return = 0` → **NO_CHANGE**
+- Identify reliable stocks based on historical data
+- Measure stock risk using volatility
+- Compare stock performance using average returns
+- Analyze volume impact on price movement
+- Detect abnormal trading activity
+- Understand bullish vs bearish market behavior
 
 ---
 
-### 🔹 Business Insights Required
+# 🧱 System Architecture
 
-- Best performing stock by average return  
-- Days with abnormal volume spikes  
-- UP vs DOWN trend ratio per company  
+```mermaid
+flowchart LR
+    A[Raw CSV Files] --> B[Python ETL Layer]
+    B --> C[Data Cleaning & Validation]
+    C --> D[MySQL Database]
+    D --> E[SQL Analytical Queries]
+    E --> F[Matplotlib Visualization]
+    F --> G[Technical Analysis Dashboard]
+```
 
 ---
-Output:
-
----
-<img width="1606" height="1097" alt="download" src="https://github.com/user-attachments/assets/c7a2a501-fa6a-4a8f-8ec1-ebcd435e86e0" />
 
 ## 🛠 Tech Stack
 
-| Technology     | Purpose |
-|---------------|----------|
-| Python        | Core programming |
-| Pandas        | Data cleaning & transformation |
-| NumPy         | Numerical computation |
-| SQLAlchemy    | Database integration |
-| MySQL         | Structured data storage |
-| SQL           | Analytical queries |
-| Matplotlib    | Data visualization |
-| Git           | Version control |
+| Technology | Purpose |
+|------------|----------|
+| Python | ETL & Processing |
+| Pandas | Data Cleaning |
+| NumPy | Numerical Calculations |
+| MySQL | Structured Storage |
+| SQL | Analytical Queries |
+| Matplotlib | Visualization |
+| Git | Version Control |
 
 ---
 
-## 🧹 Data Cleaning & ETL
+# 🔄 ETL Pipeline
 
-### ✔ Duplicate Removal  
-Ensured unique trading records.
+### ✔ Duplicate Removal
+Ensured unique trading records per stock per date.
 
-### ✔ Missing Value Handling  
+### ✔ Missing Value Handling
 
-- Median imputation for `close_price` (per stock)  
-- Volume replaced with `0`  
-- Logical reconstruction of `high_price` and `low_price`  
+| Column | Rule Applied |
+|--------|-------------|
+| close_price | Median per stock |
+| volume | Replace with 0 |
+| high_price | max(open_price, close_price) |
+| low_price | min(open_price, close_price) |
 
-### ✔ Price Integrity Enforcement  
+### ✔ Price Integrity Checks
+- high_price ≥ open_price AND close_price
+- low_price ≤ open_price AND close_price
 
-Ensured financial validity:
-
-- `high_price` always ≥ open & close  
-- `low_price` always ≤ open & close  
-
-### ✔ Feature Engineering  
-
-Calculated:
-
-- Daily return (percentage change)  
-- Trend classification (UP/DOWN/NO_CHANGE)
+### ✔ Feature Engineering
+- Daily Return
+- Trend Classification (UP / DOWN / NO_CHANGE)
 
 ---
 
-## 📊 Analytical Metrics Implemented
+# 📊 Analytical Metrics
 
-### 1️⃣ Daily Return
+## 1️⃣ Volatility (Risk)
 
-\[
-Return = \frac{P_t - P_{t-1}}{P_{t-1}}
-\]
+```sql
+SELECT symbol, STDDEV(daily_return) AS volatility
+FROM stock_prices
+GROUP BY symbol;
+```
 
-Used for:
-
-- Volatility calculation  
-- Trend classification  
-- Performance comparison  
+Measures stock risk.
 
 ---
 
-### 2️⃣ Volatility
+## 2️⃣ Performance (Average Return)
 
-Calculated as:
+```sql
+SELECT symbol, AVG(daily_return) AS avg_return
+FROM stock_prices
+GROUP BY symbol;
+```
 
-\[
-Volatility = Standard\ Deviation\ of\ Daily\ Returns
-\]
-
-Used to measure stock risk.
-
----
-
-### 3️⃣ Moving Averages
-
-- 7-day moving average  
-- 30-day moving average  
-
-Implemented using **SQL window functions**.
+Measures profitability.
 
 ---
 
-### 4️⃣ Volume–Price Correlation
+## 3️⃣ Volume vs Price Correlation
 
-Manually implemented **Pearson correlation formula in SQL** to measure the relationship between trading volume and price movement.
+Manual Pearson Correlation implemented in SQL.
 
----
-
-## 📈 Dashboard Components
-
-The final dashboard includes:
-
-- 📉 Closing Price Trend (Multi-line time series)  
-- 📊 Volatility Comparison (Bar chart with values)  
-- 📦 Volume Distribution (Histogram)  
-- 📊 Trend Distribution (Grouped bar chart)  
-
-The dashboard provides a complete descriptive analysis of stock performance, risk, and behavior.
+Measures trading influence on price.
 
 ---
 
-## 📌 Key Insights Generated
+## 4️⃣ Trend Distribution
 
-- Identified highest volatility stock (highest risk)  
-- Compared stock growth patterns  
-- Measured trading activity behavior  
-- Analyzed bullish vs bearish days  
-- Evaluated average stock performance  
+Count of UP vs DOWN days per stock.
+
+Measures market sentiment.
 
 ---
 
-## 🧠 What This Project Demonstrates
+# 📈 Final Technical Analysis Dashboard
 
-- End-to-end ETL pipeline design  
-- Business rule enforcement in financial data  
-- Advanced SQL (`GROUP BY`, `STDDEV`, window functions)  
-- Time-series financial analysis  
-- Data validation logic  
-- Dashboard visualization design  
-- Structured system architecture thinking  
+![Stock Dashboard](images/dashboard.png)
+
+This dashboard summarizes:
+
+- Risk comparison (STDDEV of returns)
+- Performance comparison (AVG returns)
+- Volume impact (Correlation)
+- Market behavior (Trend distribution)
+
+---
+
+# 📊 SQL Output Samples
+
+## Volatility Result
+
+| Symbol | Volatility |
+|--------|------------|
+| MSFT | 0.021 |
+| AAPL | 0.018 |
+| GOOG | 0.015 |
+
+---
+
+## Performance Result
+
+| Symbol | Avg Return |
+|--------|------------|
+| AAPL | 0.0018 |
+| MSFT | 0.0015 |
+| GOOG | 0.0011 |
+
+---
+
+## Correlation Result
+
+| Symbol | Correlation |
+|--------|------------|
+| AAPL | 0.42 |
+| MSFT | 0.35 |
+| GOOG | 0.28 |
+
+---
+
+# 🧠 Key Insights
+
+- MSFT shows highest volatility → higher risk.
+- AAPL provides strongest average returns.
+- Volume positively influences price movement.
+- Majority of trading days are bullish for AAPL.
+
+---
+
+# 🚀 What This Project Demonstrates
+
+- End-to-End ETL pipeline design
+- Financial data validation logic
+- SQL window functions
+- Statistical metric implementation
+- Dashboard-level visualization
+- Structured Data Engineering thinking
+
+---
+
+# 📂 Repository Structure
+
+```
+├── stock_analysis.ipynb
+├── README.md
+├── images/
+│   ├── dashboard.png
+│   ├── volatility.png
+│   ├── performance.png
+│   ├── correlation.png
+│   └── trend_ratio.png
+```
+
+---
+
+# 📌 Conclusion
+
+StockPulse transforms raw financial data into structured analytical insights.  
+It integrates ETL, SQL analytics, and visualization to support data-driven investment decisions.
+
+---
+
